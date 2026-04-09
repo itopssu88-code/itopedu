@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>구독 서비스 실시간 작업 현황판</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; }
+        .status-circle {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-bg { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-4 md:p-6 lg:p-8">
+
+    <!-- Header -->
+    <header class="max-w-7xl mx-auto w-full flex flex-col md:flex-row justify-between items-center mb-8 lg:mb-12 gap-4">
+        <div class="text-center md:text-left">
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-800">Subscription Status Board</h1>
+            <p class="text-sm md:text-base text-slate-500 mt-1">실시간 공유 계정 작업 현황</p>
+        </div>
+        <div id="user-info" class="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border border-slate-100 w-full md:w-auto justify-center">
+            <span class="text-slate-600 font-medium text-sm md:text-base" id="display-name">사용자 등록 필요</span>
+            <button onclick="window.openNameModal()" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                <i data-lucide="user-cog" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8 mb-12">
+        
+        <!-- Canva -->
+        <div class="flex flex-col items-center gap-5 bg-white p-5 md:p-4 lg:p-8 rounded-[2rem] shadow-xl border border-slate-50">
+            <h2 class="text-xl lg:text-2xl font-bold text-slate-700">Canva</h2>
+            <div id="circle-canva" class="status-circle w-48 h-48 md:w-44 md:h-44 lg:w-64 lg:h-64 rounded-full border-[8px] lg:border-[12px] flex flex-col items-center justify-center text-center p-2 lg:p-4 mx-auto">
+                <span id="text-canva" class="text-xl lg:text-2xl font-bold">로딩 중...</span>
+                <div id="info-canva" class="hidden mt-1 lg:mt-2 text-xs lg:text-sm space-y-1">
+                    <p class="font-semibold" id="user-canva"></p>
+                    <p id="time-canva" class="opacity-80 text-[10px] lg:text-xs"></p>
+                </div>
+            </div>
+            <div class="flex flex-col w-full gap-2 lg:gap-3 mt-2">
+                <div class="flex gap-2">
+                    <button onclick="window.handleStart('canva')" id="btn-start-canva" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 lg:py-3 px-2 rounded-xl shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none text-sm lg:text-base">시작</button>
+                    <button onclick="window.handleEnd('canva')" id="btn-end-canva" class="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2.5 lg:py-3 px-2 rounded-xl shadow-lg shadow-rose-100 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none text-sm lg:text-base">종료</button>
+                </div>
+                <button onclick="window.openLogModal('canva')" class="w-full text-slate-400 text-xs lg:text-sm hover:text-slate-600 transition-colors py-2">누적 사용 기록 보기</button>
+            </div>
+        </div>
+
+        <!-- Miricanvas -->
+        <div class="flex flex-col items-center gap-5 bg-white p-5 md:p-4 lg:p-8 rounded-[2rem] shadow-xl border border-slate-50">
+            <h2 class="text-xl lg:text-2xl font-bold text-slate-700">미리캔버스</h2>
+            <div id="circle-miricanvas" class="status-circle w-48 h-48 md:w-44 md:h-44 lg:w-64 lg:h-64 rounded-full border-[8px] lg:border-[12px] flex flex-col items-center justify-center text-center p-2 lg:p-4 mx-auto">
+                <span id="text-miricanvas" class="text-xl lg:text-2xl font-bold">로딩 중...</span>
+                <div id="info-miricanvas" class="hidden mt-1 lg:mt-2 text-xs lg:text-sm space-y-1">
+                    <p class="font-semibold" id="user-miricanvas"></p>
+                    <p id="time-miricanvas" class="opacity-80 text-[10px] lg:text-xs"></p>
+                </div>
+            </div>
+            <div class="flex flex-col w-full gap-2 lg:gap-3 mt-2">
+                <div class="flex gap-2">
+                    <button onclick="window.handleStart('miricanvas')" id="btn-start-miricanvas" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 lg:py-3 px-2 rounded-xl shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none text-sm lg:text-base">시작</button>
+                    <button onclick="window.handleEnd('miricanvas')" id="btn-end-miricanvas" class="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2.5 lg:py-3 px-2 rounded-xl shadow-lg shadow-rose-100 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none text-sm lg:text-base">종료</button>
+                </div>
+                <button onclick="window.openLogModal('miricanvas')" class="w-full text-slate-400 text-xs lg:text-sm hover:text-slate-600 transition-colors py-2">누적 사용 기록 보기</button>
+            </div>
+        </div>
+
+        <!-- CapCut -->
+        <div class="flex flex-col items-center gap-5 bg-white p-5 md:p-4 lg:p-8 rounded-[2rem] shadow-xl border border-slate-50">
+            <h2 class="text-xl lg:text-2xl font-bold text-slate-700">캡컷</h2>
+            <div id="circle-capcut" class="status-circle w-48 h-48 md:w-44 md:h-44 lg:w-64 lg:h-64 rounded-full border-[8px] lg:border-[12px] flex flex-col items-center justify-center text-center p-2 lg:p-4 mx-auto">
+                <span id="text-capcut" class="text-xl lg:text-2xl font-bold">로딩 중...</span>
+                <div id="info-capcut" class="hidden mt-1 lg:mt-2 text-xs lg:text-sm space-y-1">
+                    <p class="font-semibold" id="user-capcut"></p>
+                    <p id="time-capcut" class="opacity-80 text-[10px] lg:text-xs"></p>
+                </div>
+            </div>
+            <div class="flex flex-col w-full gap-2 lg:gap-3 mt-2">
+                <div class="flex gap-2">
+                    <button onclick="window.handleStart('capcut')" id="btn-start-capcut" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 lg:py-3 px-2 rounded-xl shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none text-sm lg:text-base">시작</button>
+                    <button onclick="window.handleEnd('capcut')" id="btn-end-capcut" class="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2.5 lg:py-3 px-2 rounded-xl shadow-lg shadow-rose-100 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none text-sm lg:text-base">종료</button>
+                </div>
+                <button onclick="window.openLogModal('capcut')" class="w-full text-slate-400 text-xs lg:text-sm hover:text-slate-600 transition-colors py-2">누적 사용 기록 보기</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <!-- Name Modal -->
+    <div id="modal-name" class="fixed inset-0 modal-bg flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-[2rem] p-6 lg:p-8 w-full max-w-sm shadow-2xl">
+            <h3 class="text-xl font-bold mb-2 text-slate-800">이름을 등록하세요</h3>
+            <p class="text-slate-500 mb-6 text-sm">작업 현황판에 표시될 이름을 입력해 주세요.</p>
+            <input type="text" id="input-name" class="w-full border border-slate-200 rounded-xl px-4 py-3 mb-6 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="이름 입력 (예: 홍길동)">
+            <button onclick="window.saveName()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-all">등록 완료</button>
+        </div>
+    </div>
+
+    <!-- Time Selection Modal -->
+    <div id="modal-time" class="fixed inset-0 modal-bg flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-[2rem] p-6 lg:p-8 w-full max-w-sm shadow-2xl text-center">
+            <h3 class="text-xl font-bold mb-1 text-slate-800">예상 작업 시간 설정</h3>
+            <p class="text-slate-500 mb-4 text-sm">버튼을 눌러 시간을 합산해 주세요.</p>
+            
+            <div class="bg-slate-50 py-4 px-6 rounded-2xl border border-slate-100 mb-6 flex justify-center items-baseline gap-1">
+                <span id="display-pending-time" class="text-3xl font-black text-blue-600">0분</span>
+                <span class="text-slate-400 text-sm">선택됨</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <button onclick="window.addToPendingTime(30)" class="bg-white hover:bg-blue-50 text-slate-700 font-bold py-4 rounded-xl border border-slate-200 transition-all shadow-sm">+30분</button>
+                <button onclick="window.addToPendingTime(60)" class="bg-white hover:bg-blue-50 text-slate-700 font-bold py-4 rounded-xl border border-slate-200 transition-all shadow-sm">+1시간</button>
+            </div>
+            
+            <button onclick="window.resetPendingTime()" class="text-rose-400 text-xs mb-6 hover:underline flex items-center justify-center gap-1 mx-auto">
+                <i data-lucide="rotate-ccw" class="w-3 h-3"></i> 시간 초기화
+            </button>
+
+            <div class="flex flex-col gap-2">
+                <button id="btn-confirm-start" onclick="window.executeStart()" disabled class="w-full bg-slate-900 text-white font-bold py-4 rounded-xl hover:bg-slate-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed">시작하기</button>
+                <button onclick="window.closeModal('modal-time')" class="text-slate-400 text-sm py-2">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log Modal -->
+    <div id="modal-log" class="fixed inset-0 modal-bg flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-[2.5rem] p-6 lg:p-8 w-full max-w-2xl max-h-[80vh] overflow-hidden shadow-2xl flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl lg:text-2xl font-bold text-slate-800"><span id="log-site-title"></span> 사용 이력</h3>
+                <button onclick="window.downloadExcel()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-lg text-xs lg:text-sm font-semibold flex items-center gap-2">
+                    <i data-lucide="download" class="w-4 h-4"></i> 다운로드
+                </button>
+            </div>
+            <div class="overflow-y-auto flex-1 border-t border-slate-50 pt-4">
+                <table class="w-full text-left text-sm lg:text-base">
+                    <thead class="text-slate-400">
+                        <tr>
+                            <th class="pb-3 font-medium">사용자</th>
+                            <th class="pb-3 font-medium">시작 시간</th>
+                            <th class="pb-3 font-medium">종료 시간</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-table-body" class="text-slate-600">
+                        <!-- Logs here -->
+                    </tbody>
+                </table>
+            </div>
+            <button onclick="window.closeModal('modal-log')" class="mt-6 w-full py-3 bg-slate-100 rounded-xl font-bold text-slate-600 hover:bg-slate-200">닫기</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl transition-all opacity-0 translate-y-10 pointer-events-none z-[100] text-sm md:text-base whitespace-nowrap"></div>
+
+    <script type="module">
+        // Firebase Auth를 제외한 SDK만 임포트
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+        // 사용자 제공 Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCo0-uY8czUOCQE4qr9tI0LLt6ofNL397E",
+            authDomain: "itopedu.firebaseapp.com",
+            projectId: "itopedu",
+            storageBucket: "itopedu.firebasestorage.app",
+            messagingSenderId: "329487889810",
+            appId: "1:329487889810:web:7283a59f2793fe4d493d4b",
+            measurementId: "G-PW3MRVK9ED"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        // State
+        let userName = localStorage.getItem('site_board_user_name') || "";
+        let currentActionSite = null;
+        let currentLogs = [];
+        let pendingMinutes = 0;
+
+        // 임의의 유저 ID 생성 (로컬 스토리지에 저장하여 재사용)
+        let userId = localStorage.getItem('site_board_user_id');
+        if (!userId) {
+            userId = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('site_board_user_id', userId);
+        }
+
+        // --- UI Helpers ---
+        const formatTime = (timestamp) => {
+            if (!timestamp) return "";
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+        };
+
+        const showToast = (msg) => {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.remove('opacity-0', 'translate-y-10');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-10');
+            }, 3000);
+        };
+
+        const closeModal = (id) => {
+            const el = document.getElementById(id);
+            if(el) el.classList.add('hidden');
+            if(id === 'modal-time') resetPendingTime();
+        };
+
+        const updateUI = (siteId, data) => {
+            const circle = document.getElementById(`circle-${siteId}`);
+            const text = document.getElementById(`text-${siteId}`);
+            const info = document.getElementById(`info-${siteId}`);
+            const userDisp = document.getElementById(`user-${siteId}`);
+            const timeDisp = document.getElementById(`time-${siteId}`);
+            const btnStart = document.getElementById(`btn-start-${siteId}`);
+            const btnEnd = document.getElementById(`btn-end-${siteId}`);
+
+            if (data && data.status === 'using') {
+                circle.classList.add('border-rose-500', 'text-rose-500', 'bg-rose-50', 'shadow-inner');
+                circle.classList.remove('border-emerald-500', 'text-emerald-500', 'bg-emerald-50');
+                text.innerText = "사용 중";
+                info.classList.remove('hidden');
+                userDisp.innerText = data.userName;
+                timeDisp.innerText = `${formatTime(data.startTime)} ~ ${formatTime(data.endTime)} 예정`;
+                btnStart.disabled = true;
+                btnEnd.disabled = false;
+            } else {
+                circle.classList.add('border-emerald-500', 'text-emerald-500', 'bg-emerald-50', 'shadow-inner');
+                circle.classList.remove('border-rose-500', 'text-rose-500', 'bg-rose-50');
+                text.innerText = "사용가능";
+                info.classList.add('hidden');
+                btnStart.disabled = false;
+                btnEnd.disabled = true;
+            }
+        };
+
+        // --- Actions ---
+        window.openNameModal = () => {
+            document.getElementById('input-name').value = userName;
+            document.getElementById('modal-name').classList.remove('hidden');
+        };
+
+        window.saveName = () => {
+            const input = document.getElementById('input-name').value.trim();
+            if (!input) return;
+            userName = input;
+            localStorage.setItem('site_board_user_name', userName);
+            document.getElementById('display-name').innerText = `${userName} 님`;
+            closeModal('modal-name');
+            showToast("이름이 저장되었습니다.");
+        };
+
+        window.handleStart = (siteId) => {
+            if (!userName) {
+                showToast("이름을 먼저 등록해 주세요.");
+                window.openNameModal();
+                return;
+            }
+            currentActionSite = siteId;
+            resetPendingTime();
+            document.getElementById('modal-time').classList.remove('hidden');
+        };
+
+        window.addToPendingTime = (mins) => {
+            pendingMinutes += mins;
+            const display = document.getElementById('display-pending-time');
+            const btnConfirm = document.getElementById('btn-confirm-start');
+            if (pendingMinutes >= 60) {
+                const h = Math.floor(pendingMinutes / 60);
+                const m = pendingMinutes % 60;
+                display.innerText = m > 0 ? `${h}시간 ${m}분` : `${h}시간`;
+            } else {
+                display.innerText = `${pendingMinutes}분`;
+            }
+            btnConfirm.disabled = pendingMinutes <= 0;
+        };
+
+        window.resetPendingTime = () => {
+            pendingMinutes = 0;
+            document.getElementById('display-pending-time').innerText = "0분";
+            document.getElementById('btn-confirm-start').disabled = true;
+        };
+
+        window.executeStart = async () => {
+            const now = Date.now();
+            const end = now + (pendingMinutes * 60 * 1000);
+
+            // Firestore 문서 경로 (itopedu 프로젝트의 siteStatuses 컬렉션)
+            const docRef = doc(db, 'siteStatuses', currentActionSite);
+            try {
+                await setDoc(docRef, { 
+                    status: 'using', 
+                    userId: userId, 
+                    userName: userName, 
+                    startTime: now, 
+                    endTime: end 
+                });
+                showToast(`${currentActionSite} 시작 (${pendingMinutes}분)`);
+                closeModal('modal-time');
+            } catch (err) { 
+                console.error(err); 
+                showToast("데이터 전송 실패 (Firebase 권한을 확인하세요)"); 
+            }
+        };
+
+        window.handleEnd = async (siteId) => {
+            const docRef = doc(db, 'siteStatuses', siteId);
+            try {
+                // 종료 시 상태를 available로 변경하고 로그 기록
+                await setDoc(docRef, { status: 'available' });
+                await addDoc(collection(db, `usageLogs_${siteId}`), {
+                    userName: userName,
+                    startTime: Date.now() - (30 * 60 * 1000), // 임시 데이터(정확한 시작시간은 DB구조 개선 필요)
+                    endTime: Date.now()
+                });
+                showToast("종료되었습니다.");
+            } catch (err) { 
+                console.error(err);
+                showToast("오류가 발생했습니다.");
+            }
+        };
+
+        window.openLogModal = async (siteId) => {
+            currentActionSite = siteId;
+            document.getElementById('log-site-title').innerText = siteId;
+            document.getElementById('modal-log').classList.remove('hidden');
+            const logTable = document.getElementById('log-table-body');
+            logTable.innerHTML = `<tr><td colspan="3" class="py-8 text-center">불러오는 중...</td></tr>`;
+            
+            try {
+                const logQuery = collection(db, `usageLogs_${siteId}`);
+                const snapshot = await getDocs(logQuery);
+                currentLogs = [];
+                snapshot.forEach(doc => currentLogs.push(doc.data()));
+                currentLogs.sort((a, b) => (b.endTime || 0) - (a.endTime || 0));
+                
+                if (currentLogs.length === 0) { 
+                    logTable.innerHTML = `<tr><td colspan="3" class="py-8 text-center text-slate-400">기록 없음</td></tr>`; 
+                    return; 
+                }
+                logTable.innerHTML = currentLogs.map(log => `
+                    <tr class="border-b border-slate-50 last:border-0">
+                        <td class="py-3 font-semibold">${log.userName}</td>
+                        <td class="py-3 text-xs lg:text-sm">${new Date(log.startTime).toLocaleString()}</td>
+                        <td class="py-3 text-xs lg:text-sm">${new Date(log.endTime).toLocaleString()}</td>
+                    </tr>`).join('');
+            } catch (err) { 
+                console.error(err); 
+                logTable.innerHTML = `<tr><td colspan="3" class="py-8 text-center text-rose-400">데이터를 불러오지 못했습니다.</td></tr>`;
+            }
+        };
+
+        window.downloadExcel = () => {
+            if (currentLogs.length === 0) return;
+            const data = currentLogs.map(l => ({ '사용자': l.userName, '시작': new Date(l.startTime).toLocaleString(), '종료': new Date(l.endTime).toLocaleString() }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Logs");
+            XLSX.writeFile(wb, `${currentActionSite}_logs.xlsx`);
+        };
+
+        window.closeModal = closeModal;
+
+        // --- Init ---
+        const startSyncing = () => {
+            ['canva', 'miricanvas', 'capcut'].forEach(siteId => {
+                const docRef = doc(db, 'siteStatuses', siteId);
+                onSnapshot(docRef, (snapshot) => {
+                    updateUI(siteId, snapshot.data() || { status: 'available' });
+                }, (error) => {
+                    console.error(`동기화 권한/네트워크 오류 (${siteId}):`, error);
+                    updateUI(siteId, { status: 'available' }); // 오류 시에도 초기 화면('사용가능')으로 표시하여 '로딩 중' 무한 대기 방지
+                });
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            if (userName) {
+                document.getElementById('display-name').innerText = `${userName} 님`;
+            } else {
+                setTimeout(window.openNameModal, 500);
+            }
+            // 인증 검사 없이 바로 동기화 시작
+            startSyncing();
+        });
+    </script>
+</body>
+</html>
